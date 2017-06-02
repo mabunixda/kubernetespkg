@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>{{PackageName}}</id>
+    <version>{{PackageVersion}}</version>
+    <packageSourceUrl>https://github.com/Cryowatt/kubernetespkg</packageSourceUrl>
+    <owners>Ctyowatt</owners>
+    <title>{{PackageName}}</title>
+    <authors>Google </authors>
+    <projectUrl>http://kubernetes.io/</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.png</iconUrl>
+    <copyright>© 2017 The Kubernetes Authors</copyright>
+    <!-- If there is a license Url available, it is is required for the community feed -->
+    <licenseUrl>https://raw.githubusercontent.com/kubernetes/kubernetes/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/kubernetes/kubernetes</projectSourceUrl>
+    <docsUrl>https://kubernetes.io/docs/home/</docsUrl>
+    <!--<mailingListUrl></mailingListUrl>-->
+    <bugTrackerUrl>https://github.com/kubernetes/kubernetes/issues</bugTrackerUrl>
+    <tags>kubernetes kubectl kubefed kubelet kube-proxy</tags>
+    <summary>Kubernetes Node installer</summary>
+    <description>
+Kubernetes is an open source system for managing [containerized applications]
+across multiple hosts, providing basic mechanisms for deployment, maintenance,
+and scaling of applications.
+
+Kubernetes builds upon a decade and a half of experience at Google running
+production workloads at scale using a system called [Borg],
+combined with best-of-breed ideas and practices from the community.
+
+Kubernetes is hosted by the Cloud Native Computing Foundation ([CNCF]).
+If you are a company that wants to help shape the evolution of
+technologies that are container-packaged, dynamically-scheduled
+and microservices-oriented, consider joining the CNCF.
+For details about who's involved and how Kubernetes plays a role,
+read the CNCF [announcement].
+
+
+**Please Note**: This is an automatically updated package. If you find it is 
+out of date by more than a day or two, please contact the maintainer(s) and
+let them know the package is no longer updating correctly.
+    </description>
+  </metadata>
+  <files>
+    <file src="tools\**" exclude="*.template" target="tools" />
+  </files>
+</package>

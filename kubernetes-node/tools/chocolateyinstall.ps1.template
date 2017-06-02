@@ -1,0 +1,29 @@
+﻿$ErrorActionPreference = 'Stop'; # stop on all errors
+
+#Items that could be replaced based on what you call chocopkgup.exe with
+#{{PackageName}} - Package Name (should be same as nuspec file and folder) |/p
+#{{PackageVersion}} - The updated version | /v
+#{{DownloadUrl}} - The url for the native file | /u
+#{{PackageFilePath}} - Downloaded file if including it in package | /pp
+#{{PackageGuid}} - This will be used later | /pg
+#{{DownloadUrlx64}} - The 64-bit url for the native file | /u64
+#{{Checksum}} - The checksum for the url | /c
+#{{Checksumx64}} - The checksum for the 64-bit url | /c64
+#{{ChecksumType}} - The checksum type for the url | /ct
+#{{ChecksumTypex64}} - The checksum type for the 64-bit url | /ct64
+
+$packageName= '{{PackageName}}' # arbitrary name for the package, used in messages
+$toolsDir   = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
+$unzipDir = "$(Join-Path $toolsDir temp)"
+$url64      = '{{DownloadUrlx64}}' # 64bit URL here (HTTPS preferred) or remove - if installer contains both (very rare), use $url
+
+$packageArgs = @{
+  packageName   = $packageName
+  unzipLocation = $unzipDir
+  url64bit      = $url64
+  checksum64    = '{{Checksumx64}}'
+  checksumType64= 'sha256' #default is checksumType
+}
+
+Install-ChocolateyZipPackage @packageArgs # https://chocolatey.org/docs/helpers-install-chocolatey-zip-package
+Get-ChocolateyUnzip -PackageName "$packageName" -FileFullPath "$unzipDir" -Destination "$toolsDir"

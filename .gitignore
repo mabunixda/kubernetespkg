@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/kubernetes-node/tools/chocolateyinstall.ps1
+/kubernetes-node/kubernetes-node.nuspec
+*.nupkg
