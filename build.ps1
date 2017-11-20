@@ -21,7 +21,7 @@ $baseURI = "https://raw.githubusercontent.com/kubernetes/kubernetes/master"
     (Invoke-WebRequest $baseURI/CHANGELOG-$kubeVersion.md).Content -split "`n" | Where-Object { 
         $_ -match "\[kubernetes-node-windows-amd64.tar.gz\]\((?<Url>.*?/v(?<Version>\d+\.\d+\.\d+)(?<VersionFlag>-.*?)\/.*?)\) \| ``(?<Hash>\w+)``" 
     } | ForEach-Object {
-        $version = $matches["Version"]c
+        $version = $matches["Version"]
         if(-not [string]::IsNullOrEmpty($matches["VersionFlag"])) {
            $version += $matches["VersionFlag"].Replace(".","")
         }
