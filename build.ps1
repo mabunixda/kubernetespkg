@@ -9,7 +9,31 @@
 #{{ChecksumType}} - The checksum type for the url | /ct
 #{{ChecksumTypex64}} - The checksum type for the 64-bit url | /ct64
 
-Write-Progress -Activity "Downloading kubernetes changelog"git 
+write-progress -Activity "Checking for administrive rights..."
+$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+ if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -eq $False) {
+     write-error "Current shell is not administrive to install chocolatey!"
+     exit 1
+ }
+
+Write-Progress -Activity "Checking for chocolatey..."
+if ($null -eq (Get-Command "choco.exe" -ErrorAction SilentlyContinue)) { 
+    write-progress -activity "installing chocolatey..."
+    Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+}
+
+if( $null -eq $env:ChocoApiKey) {
+    write-error "Please set environment variable ChocoApiKey!"
+    exit 1
+}
+
+Write-Progress -Activity "setting apikey..."
+choco apikey --key $env:ChocoApiKey --source https://push.chocolatey.org/
+
+Write-Progress -Activity "Removing previous packages..."
+Remove-Item *.nupkg
+
+Write-Progress -Activity "Downloading kubernetes changelog"
 $baseURI = "https://raw.githubusercontent.com/kubernetes/kubernetes/master"
 
 (Invoke-WebRequest $baseURI/CHANGELOG.md).Content -split "`n" | Where-Object { 
@@ -19,7 +43,7 @@ $baseURI = "https://raw.githubusercontent.com/kubernetes/kubernetes/master"
 
     Write-Progress -Activity "Downloading kubernetes changelog $kubeVersion"
     (Invoke-WebRequest $baseURI/CHANGELOG-$kubeVersion.md).Content -split "`n" | Where-Object { 
-        $_ -match "\[kubernetes-node-windows-amd64.tar.gz\]\((?<Url>.*?/v(?<Version>\d+\.\d+\.\d+)(?<VersionFlag>-.*?)\/.*?)\) \| ``(?<Hash>\w+)``" 
+        $_ -match "\[kubernetes-node-windows-amd64.tar.gz\]\((?<Url>.*?/v(?<Version>\d+\.\d+\.\d+)(?<VersionFlag>-.*?)?\/.*?)\) \| ``(?<Hash>\w+)``" 
     } | ForEach-Object {
         $version = $matches["Version"]
         if(-not [string]::IsNullOrEmpty($matches["VersionFlag"])) {
@@ -38,6 +62,16 @@ $baseURI = "https://raw.githubusercontent.com/kubernetes/kubernetes/master"
                 -replace "{{Checksumx64}}", $versionInfo.Hash > $outFile
         }
 
-        choco.exe pack .\kubernetes-node\kubernetes-node.nuspec --version=$($versionInfo.Version)
+        Write-Progress -Activity "checking if $($versionInfo.Version) exists..."
+        $versionExists = choco search kubernetes-node  --exact --version=$($versionInfo.Version) | Where { $_ -match "^(?<count>\d+) .*" } 
+        if($matches["count"] -eq "0") {                   
+
+            Write-Progress -Activity "packing $($versionInfo.Version)..."
+            choco.exe pack .\kubernetes-node\kubernetes-node.nuspec --version=$($versionInfo.Version)
+        
+            Write-Progress -Activity "push $($versionInfo.Version)..."
+            choco.exe push kubernetes-node.$($versionInfo.Version).nupkg --source https://push.chocolatey.org/
+
+        }
     }
 }
