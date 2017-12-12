@@ -5,7 +5,7 @@
     <id>{{PackageName}}</id>
     <version>{{PackageVersion}}</version>
     <packageSourceUrl>https://github.com/Cryowatt/kubernetespkg</packageSourceUrl>
-    <owners>Ctyowatt</owners>
+    <owners>mgit</owners>
     <title>{{PackageName}}</title>
     <authors>Google </authors>
     <projectUrl>http://kubernetes.io/</projectUrl>
