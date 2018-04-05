@@ -11,7 +11,8 @@
 
  param (
     [Int]$minorVersions = 1,
-    [switch]$dontPush = $false
+    [switch]$dontPush = $false,
+    [switch]$ignoreAPIKey = $false
  )
 
 function isValidKubeVersion([string]$currentVersion, [string]$testVersion) {
@@ -85,14 +86,16 @@ if ($null -eq (Get-Command "choco.exe" -ErrorAction SilentlyContinue)) {
     Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 }
 
-if( $null -eq $env:ChocoApiKey) {
-    write-error "Please set environment variable ChocoApiKey!"
-    exit 1
+
+if( $null -eq (Invoke-Command  -FilePath "choco.exe"  -ArgumentList @("apikey", "-get", "-source", "https://push.chocolatey.org/", "-r"))) {
+    if( $null -eq $env:ChocoApiKey) {
+        write-error "Please set environment variable ChocoApiKey!"
+        exit 1
+    }
+
+    Write-Progress -Activity "setting apikey..."
+    choco apikey --key $env:ChocoApiKey --source https://push.chocolatey.org/
 }
-
-Write-Progress -Activity "setting apikey..."
-choco apikey --key $env:ChocoApiKey --source https://push.chocolatey.org/
-
 Write-Progress -Activity "Removing previous packages..."
 Remove-Item *.nupkg
 
