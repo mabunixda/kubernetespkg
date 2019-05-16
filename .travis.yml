@@ -1,0 +1,8 @@
+os: windows
+
+language: shell
+
+before_install: choco install docker
+
+script:
+  - ./build.ps1 
