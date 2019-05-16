@@ -4,7 +4,7 @@ language: shell
 
 install: 
   - whoami
-  - powershell -Command "(Get-Variable PSVersionTable -ValueOnly).PSVersion" 
+  - PowerShell -Command "(Get-Variable PSVersionTable -ValueOnly).PSVersion" 
   - PowerShell -Command 'Set-ExecutionPolicy -ExecutionPolicy Unrestricted'
 script:
   - PowerShell -noexit & build.ps1
