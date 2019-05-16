@@ -72,15 +72,15 @@ function handleKubeVersion([string]$kubeVersion) {
 
 }
 
-write-progress -Activity "Checking for administrive rights..."
-$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
- if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -eq $false) {
-     write-error "Current shell is not administrive to install chocolatey!"
-     exit 1
- }
 
 Write-Progress -Activity "Checking for chocolatey..."
 if ($null -eq (Get-Command "choco.exe" -ErrorAction SilentlyContinue)) { 
+    write-progress -Activity "Checking for administrive rights..."
+    $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -eq $false) {
+        write-error "Current shell is not administrive to install chocolatey!"
+        exit 1
+    }
     write-progress -activity "installing chocolatey..."
     Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 }
