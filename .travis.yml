@@ -4,9 +4,9 @@ language: cpp
 install: 
   - whoami
   - PowerShell -Command 'Set-ExecutionPolicy -ExecutionPolicy Unrestricted'
+  - choco apikey --key $env:ChocoApiKey --source https://push.chocolatey.org/
 
 script:
   - env
-  - choco list -l
   - PowerShell -Command 'Get-Location'
   - PowerShell -File  'build.ps1'
