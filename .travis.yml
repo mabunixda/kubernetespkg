@@ -9,4 +9,4 @@ install:
 script:
   - env
   - PowerShell -Command 'Get-Location'
-  - PowerShell -File  'build.ps1'
+  - PowerShell -File  'build.ps1' -ignoreAPIKey

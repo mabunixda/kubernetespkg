@@ -48,6 +48,7 @@ function createChocoPackage($versionInfo) {
         
       Write-Host "push $($versionInfo.Version)..."
       choco.exe push kubernetes-node.$($versionInfo.Version).nupkg --source https://push.chocolatey.org/
+      Remove-Item kubernetes-node.$($versionInfo.Version).nupkg
 
    }
 }
@@ -69,48 +70,55 @@ function handleKubeVersion([string]$kubeVersion) {
         }
           
         $versionInfo = New-Object PSObject -Property @{ "Hash" = $matches["Hash"]; "Url" = $matches["Url"]; "Version" = $version }
+        if($null -neq $env:CI) {
+            if($env:TRAVIS_BRANCH -neq "master" -And $env:TRAVIS_BRANCH -neq $versionInfo.Version) {
+                continue
+            }
+        }
         CreateChocoPackage -versionInfo $versionInfo
 
     }
 
 }
 
-
 if($null -eq $env:CI) {
-
-    Write-Progress -Activity "Checking for chocolatey..."
+    Write-Host "Checking for chocolatey..."
     if ($null -eq (Get-Command "choco.exe" -ErrorAction SilentlyContinue)) {
-        write-progress -Activity "Checking for administrive rights..."
+        Write-Host "Checking for administrive rights..."
         $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
         if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -eq $false) {
             write-error "Current shell is not administrive to install chocolatey!"
             exit 1
         }
-        write-progress -activity "installing chocolatey..."
+        Write-Host "installing chocolatey..."
         Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
     }
 }
 
 
-if( $null -eq (Invoke-Command  -FilePath "choco.exe"  -ArgumentList @("apikey", "-get", "-source", "https://push.chocolatey.org/", "-r"))) {
-    if( $null -eq $env:ChocoApiKey) {
-        write-error "Please set environment variable ChocoApiKey!"
-        exit 1
-    }
+if($ignoreAPIKey -eq $false ) {
+    if($null -eq (Invoke-Command  -FilePath "choco.exe"  -ArgumentList @("apikey", "-get", "-source", "https://push.chocolatey.org/", "-r"))) {
+        if($null -eq $env:ChocoApiKey) {
+            write-error "Please set environment variable ChocoApiKey!"
+            exit 1
+        }
 
-    Write-Host "setting apikey..."
-    choco apikey --key $env:ChocoApiKey --source https://push.chocolatey.org/
+        Write-Host "setting apikey..."
+        choco apikey --key $env:ChocoApiKey --source https://push.chocolatey.org/
+    }
 }
-Write-Host "Removing previous packages..."
-Remove-Item *.nupkg
 
 $latestRelease = Invoke-RestMethod -UseBasicParsing -Uri "https://api.github.com/repos/kubernetes/kubernetes/releases/latest" -Method Get
 $a = [regex]"(\d+\.\d+)"
 $currentVersion = $a.Matches($latestRelease.name)
 $baseURI = "https://raw.githubusercontent.com/kubernetes/kubernetes/master"
 
+if($null -neq $env:CI) {
+    $forceVersion = $a.Matches($env:TRAVIS_BRANCH)
+    Write-Host "Enforcing versio nbuild $forceVersion..."
+}
 if($forceVersion) {
-    Write-Progress "Forced processing of version $forceVersion"
+    Write-Host "Forced processing of version $forceVersion"
     handleKubeVersion -kubeVersion $forceVersion
     return
 }
