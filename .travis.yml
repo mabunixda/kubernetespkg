@@ -5,6 +5,7 @@ language: shell
 install: 
   - PowerShell -Command 'Set-ExecutionPolicy -ExecutionPolicy Unrestricted'
   - choco install docker
+  - docker version
 
 script:
   - PowerShell -File build.ps1
