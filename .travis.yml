@@ -4,9 +4,7 @@ language: shell
 
 install:
   - whoami
+  - powershell -Command "(Get-Variable PSVersionTable -ValueOnly).PSVersion"
   - PowerShell -Command 'Set-ExecutionPolicy -ExecutionPolicy Unrestricted'
-  - docker version
-services:
-  - docker
 script:
-  - PowerShell -File build.ps1
+  - PowerShell -noexit & build.ps1
