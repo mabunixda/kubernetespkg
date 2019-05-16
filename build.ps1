@@ -10,6 +10,7 @@
 #{{ChecksumTypex64}} - The checksum type for the 64-bit url | /ct64
 
  param (
+    [String]$forceVersion = "",
     [Int]$minorVersions = 1,
     [switch]$dontPush = $false,
     [switch]$ignoreAPIKey = $false
@@ -17,6 +18,7 @@
 
 function isValidKubeVersion([string]$currentVersion, [string]$testVersion) {
 
+    Write-Host "Getting Kube version $currentVersion"
     [Int32]$currentMinor = [convert]::ToInt32($currentVersion.Substring($currentVersion.LastIndexOf(".")+1))
     [Int32]$testMinor =  [convert]::ToInt32($testVersion.Substring($testVersion.LastIndexOf(".") + 1))
 
@@ -26,7 +28,7 @@ function isValidKubeVersion([string]$currentVersion, [string]$testVersion) {
 
 function createChocoPackage($versionInfo) {
 
-   Write-Progress -Activity "Building package version $($versionInfo.Version)"
+   Write-Host "Building package version $($versionInfo.Version)"
    Get-ChildItem .\kubernetes-node\ -File -Filter *.template -Recurse | ForEach-Object { 
       $outFile = [System.IO.Path]::Combine($_.DirectoryName, [System.IO.Path]::GetFileNameWithoutExtension($_.FullName))
 
@@ -37,14 +39,14 @@ function createChocoPackage($versionInfo) {
                 -replace "{{Checksumx64}}", $versionInfo.Hash > $outFile
    }
 
-   Write-Progress -Activity "checking if $($versionInfo.Version) exists..."
+   Write-Host "checking if $($versionInfo.Version) exists..."
    $versionExists = choco search kubernetes-node  --exact --version=$($versionInfo.Version) | Where { $_ -match "^(?<count>\d+) .*" } 
    if($matches["count"] -eq "0") {                   
 
-      Write-Progress -Activity "packing $($versionInfo.Version)..."
+      Write-Host "packing $($versionInfo.Version)..."
       choco.exe pack .\kubernetes-node\kubernetes-node.nuspec --version=$($versionInfo.Version)
         
-      Write-Progress -Activity "push $($versionInfo.Version)..."
+      Write-Host "push $($versionInfo.Version)..."
       choco.exe push kubernetes-node.$($versionInfo.Version).nupkg --source https://push.chocolatey.org/
 
    }
@@ -56,7 +58,7 @@ function handleKubeVersion([string]$kubeVersion) {
         return
     }
         
-    Write-Progress -Activity "Downloading kubernetes changelog $kubeVersion"
+    Write-Host "Downloading kubernetes changelog $kubeVersion"
     (Invoke-WebRequest $baseURI/CHANGELOG-$kubeVersion.md).Content -split "`n" | Where-Object { 
         $_ -match "\[kubernetes-node-windows-amd64.tar.gz\]\((?<Url>.*?/v(?<Version>\d+\.\d+\.\d+)(?<VersionFlag>-.*?)?\/.*?)\) \| ``(?<Hash>\w+)``" 
     } | ForEach-Object {
@@ -73,16 +75,16 @@ function handleKubeVersion([string]$kubeVersion) {
 
 }
 
-write-progress -Activity "Checking for administrive rights..."
+Write-Host "Checking for administrive rights..."
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
  if($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator) -eq $false) {
      write-error "Current shell is not administrive to install chocolatey!"
      exit 1
  }
 
-Write-Progress -Activity "Checking for chocolatey..."
+Write-Host "Checking for chocolatey..."
 if ($null -eq (Get-Command "choco.exe" -ErrorAction SilentlyContinue)) { 
-    write-progress -activity "installing chocolatey..."
+    Write-Host "installing chocolatey..."
     Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 }
 
@@ -93,18 +95,24 @@ if( $null -eq (Invoke-Command  -FilePath "choco.exe"  -ArgumentList @("apikey", 
         exit 1
     }
 
-    Write-Progress -Activity "setting apikey..."
+    Write-Host "setting apikey..."
     choco apikey --key $env:ChocoApiKey --source https://push.chocolatey.org/
 }
-Write-Progress -Activity "Removing previous packages..."
+Write-Host "Removing previous packages..."
 Remove-Item *.nupkg
 
 $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/kubernetes/kubernetes/releases/latest" -Method Get 
 $a = [regex]"(\d+\.\d+)"
 $currentVersion = $a.Matches($latestRelease.name)
-
-Write-Progress -Activity "Downloading kubernetes changelog"
 $baseURI = "https://raw.githubusercontent.com/kubernetes/kubernetes/master"
+
+if($forceVersion) {
+    Write-Progress "Forced processing of version $forceVersion"
+    handleKubeVersion -kubeVersion $forceVersion
+    return
+}
+
+Write-Host "Downloading kubernetes changelog"
 
 (Invoke-WebRequest $baseURI/CHANGELOG.md).Content -split "`n" | Where-Object { 
     $_ -match "CHANGELOG-(?<Version>\d+\.\d+)" 
