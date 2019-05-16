@@ -1,10 +1,12 @@
 os: windows
-
-language: shell
+language: cpp
 
 install:
   - whoami
-  - PowerShell -Command "(Get-Variable PSVersionTable -ValueOnly).PSVersion"
   - PowerShell -Command 'Set-ExecutionPolicy -ExecutionPolicy Unrestricted'
+
 script:
-  - PowerShell -noexit & build.ps1
+  - env
+  - choco list -l
+  - PowerShell -Command 'Get-Location'
+  - PowerShell -File  'build.ps1'
