@@ -3,9 +3,10 @@ os: windows
 language: shell
 
 install:
+  - whoami
   - PowerShell -Command 'Set-ExecutionPolicy -ExecutionPolicy Unrestricted'
-  - choco install docker
   - docker version
-
+services:
+  - docker
 script:
   - PowerShell -File build.ps1
