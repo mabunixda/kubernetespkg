@@ -2,6 +2,9 @@ os: windows
 
 language: shell
 
-before_install: choco install docker
+install:
+  - PowerShell -Command 'Set-ExecutionPolicy -ExecutionPolicy Unrestricted'
+  - choco install docker
 
-script: powershell -noexit & ./build.ps1
+script:
+  - PowerShell -File build.ps1
