@@ -4,5 +4,4 @@ language: shell
 
 before_install: choco install docker
 
-script:
-  - powershell -noexit & ./build.ps1
+script: powershell -noexit & ./build.ps1
