@@ -56,7 +56,7 @@ function handleKubeVersion([string]$kubeVersion) {
     }
         
     Write-Progress -Activity "Downloading kubernetes changelog $kubeVersion"
-    (Invoke-WebRequest $baseURI/CHANGELOG-$kubeVersion.md).Content -split "`n" | Where-Object { 
+    (Invoke-WebRequest -UseBasicParsing $baseURI/CHANGELOG-$kubeVersion.md).Content -split "`n" | Where-Object { 
         $_ -match "\[kubernetes-node-windows-amd64.tar.gz\]\((?<Url>.*?/v(?<Version>\d+\.\d+\.\d+)(?<VersionFlag>-.*?)?\/.*?)\) \| ``(?<Hash>\w+)``" 
     } | ForEach-Object {
 
@@ -99,14 +99,14 @@ choco apikey --key $env:ChocoApiKey --source https://push.chocolatey.org/
 Write-Progress -Activity "Removing previous packages..."
 Remove-Item *.nupkg
 
-$latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/kubernetes/kubernetes/releases/latest" -Method Get 
+$latestRelease = Invoke-RestMethod -UseBasicParsing -Uri "https://api.github.com/repos/kubernetes/kubernetes/releases/latest" -Method Get 
 $a = [regex]"(\d+\.\d+)"
 $currentVersion = $a.Matches($latestRelease.name)
 
 Write-Progress -Activity "Downloading kubernetes changelog"
 $baseURI = "https://raw.githubusercontent.com/kubernetes/kubernetes/master"
 
-(Invoke-WebRequest $baseURI/CHANGELOG.md).Content -split "`n" | Where-Object { 
+(Invoke-WebRequest -UseBasicParsing $baseURI/CHANGELOG.md).Content -split "`n" | Where-Object { 
     $_ -match "CHANGELOG-(?<Version>\d+\.\d+)" 
 } | ForEach-Object {
 
